@@ -1,220 +1,62 @@
-import {
-  ApprovalForAll as ApprovalForAllEvent,
-  BurnExtraValidatorSet as BurnExtraValidatorSetEvent,
-  Burnt as BurntEvent,
-  ForciblyBurnt as ForciblyBurntEvent,
-  MetadataRegistrySet as MetadataRegistrySetEvent,
-  Minted as MintedEvent,
-  RoleAdminChanged as RoleAdminChangedEvent,
-  RoleGranted as RoleGrantedEvent,
-  RoleRevoked as RoleRevokedEvent,
-  TransferBatch as TransferBatchEvent,
-  TransferSingle as TransferSingleEvent,
-  URI as URIEvent,
-  URIProviderSet as URIProviderSetEvent
-} from "../generated/SBT/SBT"
-import {
-  ApprovalForAll,
-  BurnExtraValidatorSet,
-  Burnt,
-  ForciblyBurnt,
-  MetadataRegistrySet,
-  Minted,
-  RoleAdminChanged,
-  RoleGranted,
-  RoleRevoked,
-  TransferBatch,
-  TransferSingle,
-  URI,
-  URIProviderSet
-} from "../generated/schema"
+import { Address, Bytes, log, store } from "@graphprotocol/graph-ts";
 
-export function handleApprovalForAll(event: ApprovalForAllEvent): void {
-  let entity = new ApprovalForAll(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.account = event.params.account
-  entity.operator = event.params.operator
-  entity.approved = event.params.approved
+import { Burnt as BurntEvent, ForciblyBurnt as ForciblyBurntEvent, Minted as MintedEvent } from "../generated/SBT/SBT";
+import { Company, Burn } from "../generated/schema";
+import { createEmptyMetadata } from "./utils";
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+export function handleMinted(event: MintedEvent): void {
+  log.warning("Minted {}, {}", [
+    event.params._sbtId.toHex(),
+    event.params._recipients
+      .map<string>((a) => a.toHex())
+      .join(", "),
+  ]);
 
-  entity.save()
-}
+  let users = event.params._recipients;
 
-export function handleBurnExtraValidatorSet(
-  event: BurnExtraValidatorSetEvent
-): void {
-  let entity = new BurnExtraValidatorSet(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity._burnExtraValidator = event.params._burnExtraValidator
+  let blockNumber = event.block.number;
+  let blockTimestamp = event.block.timestamp;
+  let transactionHash = event.transaction.hash;
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  for (let i = 0; i < users.length; i += 1) {
+    let address = users[i];
+    let company = Company.load(address);
+    if (company === null) {
+      let newCompany = new Company(address);
 
-  entity.save()
+      newCompany.address = address;
+      newCompany.blockNumber = blockNumber;
+      newCompany.blockTimestamp = blockTimestamp;
+      newCompany.transactionHash = transactionHash;
+
+      newCompany.save();
+    }
+  }
+
+  let metadata = createEmptyMetadata(event.params._sbtId);
+
+  metadata.createdBlockNumber = event.block.number;
+  metadata.createdBlockTimestamp = event.block.timestamp;
+
+  metadata.companies = users.map<Bytes>((a: Address) => Bytes.fromHexString(a.toHexString()));
+
+  metadata.save();
 }
 
 export function handleBurnt(event: BurntEvent): void {
-  let entity = new Burnt(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity._sbtId = event.params._sbtId
-  entity._burner = event.params._burner
+  log.warning("Burnt {}, {}", [event.params._sbtId.toHex(), event.params._burner.toHexString()]);
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  let burn = new Burn(event.transaction.hash);
+  burn.initiator = event.params._burner;
+  burn.subId = event.params._sbtId;
+  burn.blockNumber = event.block.number;
+  burn.blockTimestamp = event.block.timestamp;
+  burn.transactionHash = event.transaction.hash;
 
-  entity.save()
+  burn.save();
 }
 
 export function handleForciblyBurnt(event: ForciblyBurntEvent): void {
-  let entity = new ForciblyBurnt(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity._sbtId = event.params._sbtId
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleMetadataRegistrySet(
-  event: MetadataRegistrySetEvent
-): void {
-  let entity = new MetadataRegistrySet(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity._metadataRegistry = event.params._metadataRegistry
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleMinted(event: MintedEvent): void {
-  let entity = new Minted(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity._sbtId = event.params._sbtId
-  entity._recipients = event.params._recipients
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleRoleAdminChanged(event: RoleAdminChangedEvent): void {
-  let entity = new RoleAdminChanged(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.role = event.params.role
-  entity.previousAdminRole = event.params.previousAdminRole
-  entity.newAdminRole = event.params.newAdminRole
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleRoleGranted(event: RoleGrantedEvent): void {
-  let entity = new RoleGranted(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.role = event.params.role
-  entity.account = event.params.account
-  entity.sender = event.params.sender
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleRoleRevoked(event: RoleRevokedEvent): void {
-  let entity = new RoleRevoked(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.role = event.params.role
-  entity.account = event.params.account
-  entity.sender = event.params.sender
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleTransferBatch(event: TransferBatchEvent): void {
-  let entity = new TransferBatch(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.operator = event.params.operator
-  entity.from = event.params.from
-  entity.to = event.params.to
-  entity.ids = event.params.ids
-  entity.values = event.params.values
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleTransferSingle(event: TransferSingleEvent): void {
-  let entity = new TransferSingle(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.operator = event.params.operator
-  entity.from = event.params.from
-  entity.to = event.params.to
-  entity.id = event.params.id
-  entity.value = event.params.value
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleURI(event: URIEvent): void {
-  let entity = new URI(event.transaction.hash.concatI32(event.logIndex.toI32()))
-  entity.value = event.params.value
-  entity.id = event.params.id
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleURIProviderSet(event: URIProviderSetEvent): void {
-  let entity = new URIProviderSet(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity._uriProvider = event.params._uriProvider
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
+  log.warning("ForciblyBurnt", []);
+  store.remove("Metadata", event.params._sbtId.toHexString());
 }

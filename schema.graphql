@@ -1,121 +1,28 @@
-type ApprovalForAll @entity(immutable: true) {
+type MetadataObject @entity {
   id: Bytes!
-  account: Bytes! # address
-  operator: Bytes! # address
-  approved: Boolean! # bool
+  sbtId: BigInt!
+  digiProofType: String
+  description: String
+  uri: String
+  companies: [Company!] #address
+  createdBlockNumber: BigInt!
+  createdBlockTimestamp: BigInt!
+  updatedBlockNumber: BigInt
+  updatedBlockTimestamp: BigInt
+}
+
+type Company @entity {
+  id: Bytes! # address
+  address: Bytes!
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
 
-type BurnExtraValidatorSet @entity(immutable: true) {
+type Burn @entity(immutable: true) {
   id: Bytes!
-  _burnExtraValidator: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type Burnt @entity(immutable: true) {
-  id: Bytes!
-  _sbtId: BigInt! # uint256
-  _burner: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type ForciblyBurnt @entity(immutable: true) {
-  id: Bytes!
-  _sbtId: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type MetadataRegistrySet @entity(immutable: true) {
-  id: Bytes!
-  _metadataRegistry: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type Minted @entity(immutable: true) {
-  id: Bytes!
-  _sbtId: BigInt! # uint256
-  _recipients: [Bytes]! # address[]
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type RoleAdminChanged @entity(immutable: true) {
-  id: Bytes!
-  role: Bytes! # bytes32
-  previousAdminRole: Bytes! # bytes32
-  newAdminRole: Bytes! # bytes32
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type RoleGranted @entity(immutable: true) {
-  id: Bytes!
-  role: Bytes! # bytes32
-  account: Bytes! # address
-  sender: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type RoleRevoked @entity(immutable: true) {
-  id: Bytes!
-  role: Bytes! # bytes32
-  account: Bytes! # address
-  sender: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type TransferBatch @entity(immutable: true) {
-  id: Bytes!
-  operator: Bytes! # address
-  from: Bytes! # address
-  to: Bytes! # address
-  ids: [BigInt]! # uint256[]
-  values: [BigInt]! # uint256[]
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type TransferSingle @entity(immutable: true) {
-  id: Bytes!
-  operator: Bytes! # address
-  from: Bytes! # address
-  to: Bytes! # address
-  id: BigInt! # uint256
-  value: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type URI @entity(immutable: true) {
-  id: Bytes!
-  value: String! # string
-  id: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type URIProviderSet @entity(immutable: true) {
-  id: Bytes!
-  _uriProvider: Bytes! # address
+  subId: BigInt!
+  initiator: Bytes!
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
