@@ -6,9 +6,9 @@ dataSources:
     name: SBT
     network: mumbai
     source:
-      address: "0x0Ec8FC88510a30F3119B9cE9C15a1Ce26B91039a"
+      address: "0x741215436eA62be060e595806225a63E457EDA50"
       abi: SBT
-      startBlock: 29553053
+      startBlock: 32821378
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -20,6 +20,8 @@ dataSources:
       abis:
         - name: SBT
           file: ./abis/SBT.json
+        - name: Metadata
+          file: ./abis/Metadata.json
       eventHandlers:
         - event: Burnt(indexed uint256,address)
           handler: handleBurnt
@@ -32,9 +34,9 @@ dataSources:
     name: Metadata
     network: mumbai
     source:
-      address: "0x7d170eb110C11d512D6f638535F3682475F8b9B2"
+      address: "0xec96594A2e67C2aa11DD83a6102F070D2CE45e48"
       abi: Metadata
-      startBlock: 29553036
+      startBlock: 	32821361
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

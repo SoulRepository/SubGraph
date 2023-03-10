@@ -1,7 +1,7 @@
 type MetadataObject @entity {
   id: Bytes!
   sbtId: BigInt!
-  digiProofType: String
+  digiProofType: DigiProofType
   description: String
   uri: String
   companies: [Company!] #address
@@ -11,9 +11,14 @@ type MetadataObject @entity {
   updatedBlockTimestamp: BigInt
 }
 
+type DigiProofType @entity {
+    id: String!
+}
+
 type Company @entity {
   id: Bytes! # address
   address: Bytes!
+  name: String!
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!

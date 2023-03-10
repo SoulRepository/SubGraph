@@ -1,6 +1,6 @@
 import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 import { MetadataDeleted as MetadataDeletedEvent, MetadataSet as MetadataSetEvent, Metadata as MetadataContract } from "../generated/Metadata/Metadata";
-import { MetadataObject as MetadataEntity } from "../generated/schema";
+import {DigiProofType, MetadataObject as MetadataEntity} from "../generated/schema";
 import { METADATA_REGISTRY_ADDRESS } from "./constants";
 import { createEmptyMetadata } from "./utils";
 
@@ -35,18 +35,31 @@ export function handleMetadataSet(event: MetadataSetEvent): void {
   log.warning("MetadataSet {}", [event.params._sbtId.toHexString()]);
 
   let contract = MetadataContract.bind(Address.fromString(METADATA_REGISTRY_ADDRESS));
-  let metadataEntity = MetadataEntity.load(Bytes.fromByteArray(Bytes.fromBigInt(event.params._sbtId)));
+  let existMetadataEntity = MetadataEntity.load(Bytes.fromByteArray(Bytes.fromBigInt(event.params._sbtId)));
 
-  if (metadataEntity === null) {
-    let emptyMetadata = createEmptyMetadata(event.params._sbtId);
-    emptyMetadata.save();
-    return;
-  }
+  let metadataEntity = existMetadataEntity ? existMetadataEntity : createEmptyMetadata(event.params._sbtId)
 
   let metadataFromContract = contract.metadata(event.params._sbtId);
-  metadataEntity.digiProofType = metadataFromContract.value0;
+
+  let digiProof = ensureDigiProof(metadataFromContract.value0);
+
+  metadataEntity.createdBlockTimestamp =  event.block.timestamp;
+  metadataEntity.createdBlockNumber = event.block.number;
+
+  metadataEntity.digiProofType = digiProof.id;
   metadataEntity.description = metadataFromContract.value1;
   metadataEntity.uri = metadataFromContract.value2;
 
   metadataEntity.save();
+}
+
+
+function ensureDigiProof(type: string): DigiProofType {
+  const existDigiProof = DigiProofType.load(type);
+  if (existDigiProof) {
+    return existDigiProof;
+  }
+  const created = new DigiProofType(type);
+  created.save();
+  return created;
 }

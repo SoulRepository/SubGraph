@@ -3,6 +3,8 @@ import { Address, Bytes, log, store } from "@graphprotocol/graph-ts";
 import { Burnt as BurntEvent, ForciblyBurnt as ForciblyBurntEvent, Minted as MintedEvent } from "../generated/SBT/SBT";
 import { Company, Burn } from "../generated/schema";
 import { createEmptyMetadata } from "./utils";
+import { Metadata as MetadataContract } from "../generated/Metadata/Metadata";
+import {METADATA_REGISTRY_ADDRESS} from "./constants";
 
 export function handleMinted(event: MintedEvent): void {
   log.warning("Minted {}, {}", [
@@ -13,6 +15,8 @@ export function handleMinted(event: MintedEvent): void {
   ]);
 
   let users = event.params._recipients;
+  let contract = MetadataContract.bind(Address.fromString(METADATA_REGISTRY_ADDRESS));
+  let companyNames = contract.getCompanyNames(event.params._sbtId);
 
   let blockNumber = event.block.number;
   let blockTimestamp = event.block.timestamp;
@@ -28,6 +32,7 @@ export function handleMinted(event: MintedEvent): void {
       newCompany.blockNumber = blockNumber;
       newCompany.blockTimestamp = blockTimestamp;
       newCompany.transactionHash = transactionHash;
+      newCompany.name = companyNames[i];
 
       newCompany.save();
     }
